@@ -33,7 +33,7 @@ public class ReconoceLetras {
         // entrada: 2
         // oculto: 3
         // salidas: 1
-        MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.TANH, 2, 3, 1);
+        MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, 2, 3, 1);
         // learn the training set
         
         
