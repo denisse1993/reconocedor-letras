@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import org.neuroph.core.NeuralNetwork;
 import org.neuroph.core.learning.SupervisedTrainingElement;
 import org.neuroph.core.learning.TrainingElement;
@@ -33,8 +34,9 @@ public class LetrasFrm extends javax.swing.JFrame {
     double momentum;
     double maxError;
     double learningRate;
-    double maxIterations;
+    int maxIterations;
     int hiddenLayers;
+    int iterations;
     
     LinkedList<Letra> letras = new LinkedList<Letra>();
     
@@ -71,6 +73,17 @@ public class LetrasFrm extends javax.swing.JFrame {
         }
         
         return trainingSet;
+    }
+    
+    String getLetterOfOutput(double vector[])
+    {
+        for (Letra letra : letras)
+        {
+            if (letra.isVectorEqualTo(vector))
+                return letra.getLetra();
+        }
+                
+        return "";
     }
     
     void append2File(String file2Append) {
@@ -137,6 +150,7 @@ public class LetrasFrm extends javax.swing.JFrame {
             String strMatriz = "";
             //Read File Line By Line
             Letra letra = new Letra();
+            int readedNumber = 0;
             while ((strLine = br.readLine()) != null) {
                 StringTokenizer tokenizer = new StringTokenizer(strLine, " ");
                 
@@ -149,10 +163,13 @@ public class LetrasFrm extends javax.swing.JFrame {
     
                     while (tokenizer.hasMoreTokens())
                     {
-                        int readedNumber = Integer.parseInt( tokenizer.nextToken() );
-
+                        try
+                        {
+                            readedNumber = Integer.parseInt( tokenizer.nextToken() );
+                        } catch (NumberFormatException e) {
+                            readedNumber = 0;
+                        }
                         matrixInput[row][col] = readedNumber;
-                        System.out.println("r: " + readedNumber);
                         col++;
                     }
                     row++;
@@ -190,31 +207,38 @@ public class LetrasFrm extends javax.swing.JFrame {
 
         panelDrawing = new javax.swing.JPanel();
         cmdClose = new javax.swing.JButton();
-        txtMomentum = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        txtMaxError = new javax.swing.JTextField();
-        txtLearningRatio = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
-        txtMaxIterations = new javax.swing.JTextField();
-        jLabel6 = new javax.swing.JLabel();
-        txtHiddenLayers = new javax.swing.JTextField();
         jPanel1 = new javax.swing.JPanel();
         txtOutput = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
         txtLetter = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         cmdSave = new javax.swing.JButton();
-        cmdClear = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
-        cmdLoadTraining = new javax.swing.JToggleButton();
         cmdSaveTraining = new javax.swing.JButton();
+        cmdLoadTraining = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         cmdLoadLetters2Train = new javax.swing.JButton();
         cmdAprendizaje = new javax.swing.JButton();
+        spinIterations = new javax.swing.JSpinner();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        txtLearningRatio = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        spinMaxIterations = new javax.swing.JSpinner();
+        txtMomentum = new javax.swing.JTextField();
+        spinHiddenLayers = new javax.swing.JSpinner();
+        txtMaxError = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        jPanel4 = new javax.swing.JPanel();
+        cmdDetect = new javax.swing.JButton();
+        jLabel8 = new javax.swing.JLabel();
+        txtLetterDetected = new javax.swing.JTextField();
+        cmdClear = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Perceptrón Multicapa");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -222,6 +246,11 @@ public class LetrasFrm extends javax.swing.JFrame {
         });
 
         panelDrawing.setBackground(new java.awt.Color(204, 204, 204));
+        panelDrawing.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                panelDrawingMousePressed(evt);
+            }
+        });
         panelDrawing.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseDragged(java.awt.event.MouseEvent evt) {
                 panelDrawingMouseDragged(evt);
@@ -246,27 +275,7 @@ public class LetrasFrm extends javax.swing.JFrame {
             }
         });
 
-        txtMomentum.setText("0.15");
-
-        jLabel2.setText("Momentum:");
-
-        jLabel3.setText("Máximo Error:");
-
-        jLabel4.setText("Razón de Aprendizaje:");
-
-        txtMaxError.setText("0.2");
-
-        txtLearningRatio.setText("0.5");
-
-        jLabel5.setText("Máximo Iteraciones:");
-
-        txtMaxIterations.setText("10");
-
-        jLabel6.setText("Capas ocultas:");
-
-        txtHiddenLayers.setText("100");
-
-        jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Guardar"));
 
         txtOutput.setText("0 0 0 1 1");
 
@@ -283,32 +292,23 @@ public class LetrasFrm extends javax.swing.JFrame {
             }
         });
 
-        cmdClear.setText("Limpiar");
-        cmdClear.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmdClearActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtLetter, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtLetter, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtOutput))
+                        .addComponent(txtOutput, javax.swing.GroupLayout.DEFAULT_SIZE, 63, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(cmdClear)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cmdSave)))
                 .addContainerGap())
         );
@@ -322,13 +322,18 @@ public class LetrasFrm extends javax.swing.JFrame {
                     .addComponent(jLabel7)
                     .addComponent(txtOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cmdSave)
-                    .addComponent(cmdClear))
+                .addComponent(cmdSave)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Almacenamiento"));
+
+        cmdSaveTraining.setText("Guardar Entrenamiento");
+        cmdSaveTraining.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdSaveTrainingActionPerformed(evt);
+            }
+        });
 
         cmdLoadTraining.setText("Cargar Entrenamiento");
         cmdLoadTraining.addActionListener(new java.awt.event.ActionListener() {
@@ -337,8 +342,6 @@ public class LetrasFrm extends javax.swing.JFrame {
             }
         });
 
-        cmdSaveTraining.setText("Guardar Entrenamiento");
-
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -346,22 +349,22 @@ public class LetrasFrm extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(cmdLoadTraining, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(cmdSaveTraining, javax.swing.GroupLayout.DEFAULT_SIZE, 174, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(cmdSaveTraining, javax.swing.GroupLayout.DEFAULT_SIZE, 174, Short.MAX_VALUE)
+                    .addComponent(cmdLoadTraining, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(27, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(cmdLoadTraining)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(6, 6, 6)
                 .addComponent(cmdSaveTraining)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Entrenamiento"));
 
-        cmdLoadLetters2Train.setText("Cargar letras para entrenar");
+        cmdLoadLetters2Train.setText("Cargar letras");
         cmdLoadLetters2Train.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmdLoadLetters2TrainActionPerformed(evt);
@@ -369,11 +372,37 @@ public class LetrasFrm extends javax.swing.JFrame {
         });
 
         cmdAprendizaje.setText("Aprendizaje");
+        cmdAprendizaje.setEnabled(false);
         cmdAprendizaje.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmdAprendizajeActionPerformed(evt);
             }
         });
+
+        spinIterations.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
+        spinIterations.setValue(1);
+
+        jLabel6.setText("Capas ocultas:");
+
+        jLabel5.setText("Máximo Iteraciones:");
+
+        jLabel9.setText("Iteraciones:");
+
+        txtLearningRatio.setText("0.5");
+
+        jLabel3.setText("Máximo Error:");
+
+        jLabel2.setText("Momentum:");
+
+        spinMaxIterations.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(10), Integer.valueOf(1), null, Integer.valueOf(1)));
+
+        txtMomentum.setText("0.15");
+
+        spinHiddenLayers.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(100), Integer.valueOf(1), null, Integer.valueOf(1)));
+
+        txtMaxError.setText("0.1");
+
+        jLabel4.setText("Razón de Aprendizaje:");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -383,17 +412,102 @@ public class LetrasFrm extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cmdLoadLetters2Train, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cmdAprendizaje, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(26, Short.MAX_VALUE))
+                    .addComponent(cmdAprendizaje, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel9))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(txtMaxError)
+                            .addComponent(txtLearningRatio)
+                            .addComponent(txtMomentum)
+                            .addComponent(spinIterations)
+                            .addComponent(spinHiddenLayers)
+                            .addComponent(spinMaxIterations, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtMomentum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtMaxError, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtLearningRatio, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(spinMaxIterations, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(spinHiddenLayers, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel9)
+                    .addComponent(spinIterations, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(cmdLoadLetters2Train)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(cmdAprendizaje)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Probar"));
+
+        cmdDetect.setText("Detectar");
+        cmdDetect.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdDetectActionPerformed(evt);
+            }
+        });
+
+        jLabel8.setText("Letra detectada:");
+
+        txtLetterDetected.setEditable(false);
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtLetterDetected, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(cmdDetect, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addComponent(cmdDetect)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtLetterDetected, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        cmdClear.setText("Limpiar");
+        cmdClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdClearActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -402,76 +516,46 @@ public class LetrasFrm extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(27, 27, 27)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cmdClose))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(22, 22, 22)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel4)
-                                    .addComponent(jLabel5)
-                                    .addComponent(jLabel6))
+                                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(txtMaxIterations)
-                                    .addComponent(txtHiddenLayers, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)))
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(txtLearningRatio, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel2)
-                                        .addComponent(jLabel3))
-                                    .addGap(52, 52, 52)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(txtMaxError, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(txtMomentum, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(134, 134, 134)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(panelDrawing, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(cmdClose)))
+                                .addComponent(panelDrawing, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(26, 26, 26)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addComponent(cmdClear))))
+                        .addGap(0, 9, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txtMomentum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3)
-                            .addComponent(txtMaxError, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txtLearningRatio, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel5)
-                            .addComponent(txtMaxIterations, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel6)
-                            .addComponent(txtHiddenLayers, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(67, 67, 67))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(panelDrawing, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(cmdClose)
-                        .addContainerGap())))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmdClear))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(26, 26, 26)
+                        .addComponent(panelDrawing, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                .addComponent(cmdClose)
+                .addContainerGap())
         );
 
         pack();
@@ -482,33 +566,45 @@ public class LetrasFrm extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_cmdCloseActionPerformed
 
+    
+    private MultiLayerPerceptron mlPerceptron = null;
+    
     private void cmdAprendizajeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdAprendizajeActionPerformed
         // TODO add your handling code here:
-        maxIterations = Double.parseDouble(txtMaxIterations.getText());
-        maxError = Double.parseDouble( txtMaxError.getText() );
-        learningRate = Double.parseDouble( txtLearningRatio.getText() );
-        momentum = Double.parseDouble( txtMomentum.getText() );
+        try
+        {
+            maxIterations = (Integer)spinMaxIterations.getValue();
+            maxError = Double.parseDouble( txtMaxError.getText() );
+            learningRate = Double.parseDouble( txtLearningRatio.getText() );
+            momentum = Double.parseDouble( txtMomentum.getText() );
+            iterations = (Integer)spinIterations.getValue();
+
+            Letra.maxError = maxError;
+
+            hiddenLayers = (Integer)spinHiddenLayers.getValue();
         
-        hiddenLayers = Integer.parseInt( txtHiddenLayers.getText() );
-        
-        
-        
+        }
+        catch (NumberFormatException e)
+        {
+            JOptionPane.showMessageDialog(rootPane, "Debe ingresar solo números.");
+            return;
+        }
         for (Letra letra : letras)
         {
             letra.print();
         }
         
-        MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, Letra.COLUMNAS*Letra.FILAS, hiddenLayers, Letra.SALIDAS);
+        mlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, Letra.COLUMNAS*Letra.FILAS, hiddenLayers, Letra.SALIDAS);
         
         MomentumBackpropagation mb = new MomentumBackpropagation();
-        mb.setNeuralNetwork(myMlPerceptron);
+        mb.setNeuralNetwork(mlPerceptron);
         mb.setMomentum( momentum );
         mb.setMaxError( maxError );
         mb.setLearningRate( learningRate );       
         
-        myMlPerceptron.deleteObservers();
+        mlPerceptron.deleteObservers();
         
-        myMlPerceptron.setLearningRule(mb);
+        mlPerceptron.setLearningRule(mb);
         
         
         long t1, t2;
@@ -516,13 +612,17 @@ public class LetrasFrm extends javax.swing.JFrame {
         
         TrainingSet trainingSet = getTrainingSet();
         //mb.learn( trainingSet );
-        myMlPerceptron.learn(trainingSet);
-        
+        for (int c=0;c< iterations;c++)
+        {
+            mlPerceptron.learn(trainingSet);
+        }
         t2 = System.currentTimeMillis();        
         
         testNeuralNetwork(mb.getNeuralNetwork(), trainingSet);
         
-        mb.getNeuralNetwork().save("red.nnet");        
+        
+        
+        //mb.getNeuralNetwork().save("red.nnet");
         
         System.out.println("Iteraciones: " + mb.getCurrentIteration());
     }//GEN-LAST:event_cmdAprendizajeActionPerformed
@@ -530,9 +630,8 @@ public class LetrasFrm extends javax.swing.JFrame {
     private final int squareWidth = 40;
     private final int squareHeight = 40;
     
-    private void panelDrawingMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelDrawingMouseDragged
-        // TODO add your handling code here:
-
+    void checkMouse(java.awt.event.MouseEvent evt)
+    {
         Graphics g = panelDrawing.getGraphics();
         int fX = evt.getX();
         int fY = evt.getY();
@@ -565,13 +664,27 @@ public class LetrasFrm extends javax.swing.JFrame {
 
                 g.fillRect(inix+1, iniy+1, width-2, height-2);
             }
-        }        
+        }                
+    }
+    
+    private void panelDrawingMouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelDrawingMouseDragged
+        // TODO add your handling code here:
+        checkMouse(evt);
+
         
     }//GEN-LAST:event_panelDrawingMouseDragged
 
     private void cmdSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdSaveActionPerformed
         // TODO add your handling code here:
-        append2File("letras.txt");
+        String strOutput = txtOutput.getText();
+        if (!strOutput.matches("^[0-9] [0-9] [0-9] [0-9] [0-9]$"))
+        {
+            JOptionPane.showMessageDialog(rootPane, "La salida debe tener el formato: # # # # #");
+        }
+        else if (txtLetter.getText().length() != 1)
+            JOptionPane.showMessageDialog(rootPane, "Debes ingresar una sola letra.");
+        else
+            append2File("letras.txt");
     }//GEN-LAST:event_cmdSaveActionPerformed
 
     void resetDrawing()
@@ -609,13 +722,74 @@ public class LetrasFrm extends javax.swing.JFrame {
         letras.clear();
         readFile("letras.txt");
         
+        cmdAprendizaje.setEnabled(true);
+        
         System.out.println("Cargados: " + letras.size());
     }//GEN-LAST:event_cmdLoadLetters2TrainActionPerformed
 
+    private void cmdSaveTrainingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdSaveTrainingActionPerformed
+        // TODO add your handling code here:
+        if (mlPerceptron != null)
+            mlPerceptron.save("red.nnet");
+        else
+            JOptionPane.showMessageDialog(rootPane, "Primero debe cargar o entrenar la red");
+    }//GEN-LAST:event_cmdSaveTrainingActionPerformed
+
+    private void cmdDetectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdDetectActionPerformed
+        // TODO add your handling code here:
+        txtLetterDetected.setText("");
+        if (mlPerceptron != null &&letras.size() > 0 )
+        {
+            maxError = Double.parseDouble( txtMaxError.getText() );
+            Letra.maxError = maxError;
+            testDrawnLetter();
+        }
+        else if (letras.size() == 0)
+        {
+            JOptionPane.showMessageDialog(rootPane, "Deben existir letras cargadas.");
+        }
+    }//GEN-LAST:event_cmdDetectActionPerformed
+
     private void cmdLoadTrainingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdLoadTrainingActionPerformed
         // TODO add your handling code here:
+        mlPerceptron = (MultiLayerPerceptron)NeuralNetwork.load("red.nnet");
     }//GEN-LAST:event_cmdLoadTrainingActionPerformed
 
+    private void panelDrawingMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelDrawingMousePressed
+        // TODO add your handling code here:
+        checkMouse(evt);
+    }//GEN-LAST:event_panelDrawingMousePressed
+
+    private void testDrawnLetter()
+    {
+        mlPerceptron.setInput( getVector(matrixInput) );
+        mlPerceptron.calculate();
+        
+        double[] networkOutput = mlPerceptron.getOutput();
+        System.out.println("Input: " + Arrays.toString( getVector(matrixInput) ));
+        System.out.println(" Output: " + Arrays.toString(networkOutput));
+        
+        //networkOutput
+        txtLetterDetected.setText( getLetterOfOutput(networkOutput) );
+    }
+    
+    private double [] getVector(int matrix[][])
+    {
+        double vector[] = new double[matrix.length*matrix[0].length];
+        
+        int n = 0;
+        for (int i=0;i<matrix.length;i++)
+        {
+            for (int j=0;j<matrix[i].length;j++)
+            {
+                vector[n] = matrixInput[i][j];
+                n++;
+            }
+        }
+        
+        return vector;
+    }    
+    
     public static void testNeuralNetwork(NeuralNetwork nnet, TrainingSet tset) {
 
         TrainingSet<TrainingElement> trainset = tset;
@@ -670,7 +844,9 @@ public class LetrasFrm extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
 
             public void run() {
-                new LetrasFrm().setVisible(true);
+                LetrasFrm frm = new LetrasFrm();
+                frm.setVisible(true);
+                frm.setLocationRelativeTo(null);
             }
         });
     }
@@ -678,8 +854,9 @@ public class LetrasFrm extends javax.swing.JFrame {
     private javax.swing.JButton cmdAprendizaje;
     private javax.swing.JButton cmdClear;
     private javax.swing.JButton cmdClose;
+    private javax.swing.JButton cmdDetect;
     private javax.swing.JButton cmdLoadLetters2Train;
-    private javax.swing.JToggleButton cmdLoadTraining;
+    private javax.swing.JButton cmdLoadTraining;
     private javax.swing.JButton cmdSave;
     private javax.swing.JButton cmdSaveTraining;
     private javax.swing.JLabel jLabel1;
@@ -689,15 +866,20 @@ public class LetrasFrm extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel panelDrawing;
-    private javax.swing.JTextField txtHiddenLayers;
+    private javax.swing.JSpinner spinHiddenLayers;
+    private javax.swing.JSpinner spinIterations;
+    private javax.swing.JSpinner spinMaxIterations;
     private javax.swing.JTextField txtLearningRatio;
     private javax.swing.JTextField txtLetter;
+    private javax.swing.JTextField txtLetterDetected;
     private javax.swing.JTextField txtMaxError;
-    private javax.swing.JTextField txtMaxIterations;
     private javax.swing.JTextField txtMomentum;
     private javax.swing.JTextField txtOutput;
     // End of variables declaration//GEN-END:variables
