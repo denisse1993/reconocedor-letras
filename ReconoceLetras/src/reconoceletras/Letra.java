@@ -4,6 +4,7 @@
  */
 package reconoceletras;
 
+import java.util.Arrays;
 import java.util.StringTokenizer;
 import org.neuroph.core.learning.SupervisedTrainingElement;
 
@@ -14,6 +15,8 @@ import org.neuroph.core.learning.SupervisedTrainingElement;
 public class Letra {
     private int matrixInput[][];
     private double output[];
+    
+    public static double maxError = 0;
     
     private String letra = "";
     
@@ -56,6 +59,18 @@ public class Letra {
         }
     }
     
+    boolean isVectorEqualTo(double vector[])
+    {
+        System.out.println("cmp : " + Arrays.toString(output) + " --- i: " + Arrays.toString(vector) );
+        for (int i=0;i<SALIDAS;i++)
+        {
+            //System.out.println("." + (int)(vector[i]+maxError));
+            if ((int)(vector[i]+maxError) != output [i] )
+                return false;
+        }        
+        return true;
+    }
+    
     private double [] getVector()
     {
         double vector[] = new double[COLUMNAS*FILAS];
@@ -84,7 +99,12 @@ public class Letra {
         int n = 0;
         while (token.hasMoreTokens() && n < SALIDAS)
         {
-            output[n] = Integer.parseInt(token.nextToken());
+            try
+            {
+                output[n] = Integer.parseInt(token.nextToken());
+            } catch (NumberFormatException e) {
+                output[n] = 0;
+            }
             n++;
         }
     }
@@ -96,24 +116,6 @@ public class Letra {
     
     public void transformaLetra()
     {
-        /*
-        int col = 0;
-        int row = 0;
-
-        //Read File Line By Line
-        while ((strLine = br.readLine()) != null) {
-            StringTokenizer tokenizer = new StringTokenizer(strLine, " ");
-
-            while (tokenizer.hasMoreTokens())
-            {                    
-                int readedNumber = Integer.parseInt( tokenizer.nextToken() );
-
-                matrixInput[row][col] = readedNumber;
-                col++;
-            }
-            row++;
-
-        }        */
     }
     
 }
